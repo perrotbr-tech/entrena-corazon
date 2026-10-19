@@ -1,0 +1,508 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2f6bd2">
+<meta name="apple-mobile-web-app-title" content="Entrena el Corazón">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%232f6bd2'/><path d='M16 26s-9-5.4-9-11.6C7 10.8 9.6 8.5 12.4 8.5c1.6 0 2.8.8 3.6 2 .8-1.2 2-2 3.6-2 2.8 0 5.4 2.3 5.4 5.9C25 20.6 16 26 16 26z' fill='%23f3b23a'/></svg>">
+<title>Entrena el Corazón</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap">
+<style>
+/* Layout: una columna tipo app móvil (máx 560px), pantallas que se alternan: inicio → quiz → resultado → plan */
+:root{
+  color-scheme:light;
+  --bg:#f4f7fb; --surface:#ffffff; --ink:#1c2939; --muted:#5a6a7e; --line:#dce3ee;
+  --accent:#2f6bd2; --accent-soft:#e6eefb; --sun:#f3b23a; --sun-soft:#fdf2dc; --leaf:#2a9466; --leaf-soft:#e2f4ea;
+  --display:"Baloo 2","Trebuchet MS",system-ui,sans-serif;
+  --body:"Nunito","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f151e; --surface:#17202c; --ink:#e7edf5; --muted:#9caabd; --line:#2a3647;
+  --accent:#73a3f1; --accent-soft:#1d2b42; --sun:#f2c35e; --sun-soft:#352c19; --leaf:#4fc48f; --leaf-soft:#173527; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f151e; --surface:#17202c; --ink:#e7edf5; --muted:#9caabd; --line:#2a3647;
+  --accent:#73a3f1; --accent-soft:#1d2b42; --sun:#f2c35e; --sun-soft:#352c19; --leaf:#4fc48f; --leaf-soft:#173527; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:560px;margin:0 auto;padding-block:12px 48px;display:flex;flex-direction:column;gap:20px}
+h1,h2,h3{font-family:var(--display);line-height:1.15;text-wrap:balance;margin:0}
+h1{font-size:2rem;font-weight:800}
+h2{font-size:1.5rem;font-weight:800}
+h3{font-size:1.15rem;font-weight:700}
+p{margin:0}
+.muted{color:var(--muted)}
+.label{font-size:.75rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;justify-content:space-between;align-items:center;padding-block:10px;border-bottom:1px solid var(--line)}
+.brand{font-family:var(--display);font-weight:800;font-size:1.1rem;display:flex;align-items:center;gap:8px}
+.brand svg{width:26px;height:26px}
+.pts{font-weight:800;background:var(--sun-soft);color:var(--ink);border:1px solid var(--sun);border-radius:999px;padding:4px 12px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.btn{appearance:none;border:0;border-radius:14px;padding:15px 20px;font:800 1.05rem var(--body);cursor:pointer;background:var(--accent);color:#fff;width:100%;transition:transform .12s}
+.btn:active{transform:scale(.98)}
+.btn.ghost{background:transparent;color:var(--accent);border:2px solid var(--line)}
+.btn:focus-visible,.opt:focus-visible,input:focus-visible,.tab:focus-visible,summary:focus-visible,.done:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:10px}
+.hero{display:flex;flex-direction:column;gap:14px;padding-block:8px}
+.hero .ver{border-left:4px solid var(--sun);padding-left:12px;font-weight:700}
+.weeks-preview{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.wp{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:2px}
+.wp b{font-family:var(--display);font-size:1.02rem}
+.facts{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font-size:.85rem;font-weight:700;background:var(--accent-soft);color:var(--ink);border-radius:999px;padding:4px 12px}
+/* quiz */
+.bar{height:8px;background:var(--line);border-radius:999px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:999px;transition:width .3s}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{appearance:none;text-align:left;background:var(--surface);color:var(--ink);border:2px solid var(--line);border-radius:16px;padding:14px 16px;font:700 1rem var(--body);cursor:pointer;display:flex;gap:12px;align-items:center}
+.opt small{display:block;font-weight:600;color:var(--muted);font-size:.88rem}
+.opt[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.opt .ic{flex:none;width:38px;height:38px;border-radius:12px;background:var(--sun-soft);display:grid;place-items:center;font-family:var(--display);font-weight:800;color:var(--ink)}
+input[type=text]{width:100%;box-sizing:border-box;font:700 1.15rem var(--body);padding:14px 16px;border-radius:14px;border:2px solid var(--line);background:var(--surface);color:var(--ink)}
+.row{display:flex;gap:10px}
+.row .btn{flex:1}
+.loading{display:flex;flex-direction:column;align-items:center;gap:16px;padding-block:60px;text-align:center}
+.spin{width:54px;height:54px;border-radius:50%;border:6px solid var(--line);border-top-color:var(--accent);animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+/* resultado */
+.focus{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.focus .card{padding:14px;gap:2px}
+.focus b{font-family:var(--display);font-size:1.15rem;line-height:1.2}
+.plan-w{position:relative;flex-direction:row;align-items:center;gap:14px}
+.plan-w .n{flex:none;width:46px;height:46px;border-radius:14px;background:var(--accent-soft);display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:1.3rem;color:var(--accent)}
+.plan-w.main{border:2px solid var(--accent)}
+.plan-w.main .n{background:var(--accent);color:#fff}
+.plan-w .tx{min-width:0;flex:1}
+.plan-w .ppts{flex:none;font-weight:800;font-variant-numeric:tabular-nums;color:var(--muted);font-size:.9rem}
+.badge{position:absolute;top:-11px;left:16px;background:var(--accent);color:#fff;font-size:.72rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:2px 10px;border-radius:999px}
+.note{font-size:.9rem;color:var(--muted);text-align:center}
+/* plan */
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.tab{appearance:none;border:2px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:8px 4px;font:800 .9rem var(--body);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
+.tab small{font-weight:700;color:var(--muted);font-size:.75rem;font-variant-numeric:tabular-nums}
+.tab[aria-selected="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.wk-head{display:flex;flex-direction:column;gap:8px}
+.verse{background:var(--sun-soft);border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+.verse p{font-family:var(--display);font-size:1.2rem;font-weight:700;line-height:1.25}
+details.day{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+details.day[open]{border-color:var(--accent)}
+details.day.is-done{border-color:var(--leaf)}
+summary{list-style:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:12px}
+summary::-webkit-details-marker{display:none}
+.dn{flex:none;width:36px;height:36px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-weight:800;font-variant-numeric:tabular-nums}
+.is-done .dn{background:var(--leaf);border-color:var(--leaf);color:#fff}
+.st{min-width:0;flex:1;display:flex;flex-direction:column}
+.st b{font-family:var(--display);font-size:1.05rem;line-height:1.2}
+.st span{font-size:.8rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.chev{flex:none;transition:transform .2s;color:var(--muted)}
+details[open] .chev{transform:rotate(180deg)}
+.body{padding:0 16px 16px;display:flex;flex-direction:column;gap:14px}
+.blk{display:flex;flex-direction:column;gap:4px}
+.blk ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+.done{appearance:none;border:2px solid var(--leaf);background:transparent;color:var(--leaf);border-radius:14px;padding:12px;font:800 1rem var(--body);cursor:pointer}
+.is-done .done{background:var(--leaf);color:#fff}
+.tip{background:var(--accent-soft);border-radius:14px;padding:12px 14px;font-size:.95rem}
+.foot{display:flex;flex-direction:column;gap:10px;align-items:stretch}
+.linkbtn{appearance:none;background:none;border:0;color:var(--muted);font:700 .9rem var(--body);text-decoration:underline;cursor:pointer;padding:6px}
+@media (max-width:380px){h1{font-size:1.75rem}.weeks-preview,.focus{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+.sync{font-size:.82rem;font-weight:700;color:var(--muted);text-align:center}
+.sync.off{color:#b5462f}
+.share{display:flex;flex-direction:column;gap:6px;background:var(--surface);border:1px dashed var(--line);border-radius:14px;padding:12px}
+.share code{font-size:.8rem;word-break:break-all;user-select:all;color:var(--ink)}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 28s-11-6.6-11-14.2C5 9.4 8.2 6.5 11.7 6.5c2 0 3.4 1 4.3 2.4.9-1.4 2.3-2.4 4.3-2.4 3.5 0 6.7 2.9 6.7 7.3C27 21.4 16 28 16 28z" fill="var(--sun)"/><path d="M16 11v10M11 16h10" stroke="var(--ink)" stroke-width="2.6" stroke-linecap="round"/></svg>
+      Entrena el Corazón
+    </div>
+    <div class="pts" id="ptsTop" hidden>0 pts</div>
+  </header>
+
+  <!-- INICIO -->
+  <section id="s-start" class="hero">
+    <span class="label">Plan familiar · 4 semanas · 15 min al día</span>
+    <h1>Un plan con la Biblia para formar el carácter de tu hijo</h1>
+    <p class="muted">Responde 4 preguntas y arma un plan diario para hacer juntos: una historia bíblica, una conversación, un juego en movimiento y un momento de oración.</p>
+    <p class="ver">Enseña al niño el buen camino, y cuando crezca no lo dejará. <span class="muted">Proverbios 22:6, en palabras sencillas</span></p>
+    <div class="weeks-preview">
+      <div class="wp"><span class="label">Tema</span><b>Obedecer a la primera</b></div>
+      <div class="wp"><span class="label">Tema</span><b>Decir la verdad</b></div>
+      <div class="wp"><span class="label">Tema</span><b>Dominio propio</b></div>
+      <div class="wp"><span class="label">Tema</span><b>Paciencia y compartir</b></div>
+    </div>
+    <div class="facts"><span class="chip">Para 5 a 9 años</span><span class="chip">Sin pantallas para el niño</span><span class="chip">Suma a la tabla de puntos</span></div>
+    <button class="btn" id="go">Armar el plan</button>
+    <button class="linkbtn" id="resume" hidden>Seguir con el plan guardado</button>
+    <p class="sync" id="sync0"></p>
+  </section>
+
+  <!-- QUIZ -->
+  <section id="s-quiz" hidden>
+    <div style="display:flex;flex-direction:column;gap:18px">
+      <div class="bar" aria-hidden="true"><i id="bar"></i></div>
+      <span class="label" id="qstep"></span>
+      <h2 id="qtitle"></h2>
+      <p class="muted" id="qsub"></p>
+      <div id="qbody"></div>
+      <div class="row">
+        <button class="btn ghost" id="back">Atrás</button>
+        <button class="btn" id="next">Siguiente</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- CARGANDO -->
+  <section id="s-load" class="loading" hidden>
+    <div class="spin" aria-hidden="true"></div>
+    <h3 id="loadTxt">Ordenando las semanas…</h3>
+  </section>
+
+  <!-- RESULTADO -->
+  <section id="s-result" hidden>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <h1 id="rTitle"></h1>
+      <div class="focus">
+        <div class="card"><span class="label">Reto principal</span><b id="rReto"></b></div>
+        <div class="card"><span class="label">Enfoque del plan</span><b id="rEnfoque"></b></div>
+      </div>
+      <p class="muted" id="rMoment"></p>
+      <div id="rWeeks" style="display:flex;flex-direction:column;gap:14px;padding-top:6px"></div>
+      <div class="tip" id="rTip"></div>
+      <button class="btn" id="startPlan">Empezar la semana 1</button>
+      <p class="note">Gratis · 5 actividades por semana · 240 puntos en total</p>
+    </div>
+  </section>
+
+  <!-- PLAN -->
+  <section id="s-plan" hidden>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="tabs" role="tablist" id="tabs"></div>
+      <div class="wk-head">
+        <span class="label" id="wkLabel"></span>
+        <h2 id="wkTitle"></h2>
+        <p class="muted" id="wkLema"></p>
+      </div>
+      <div class="verse"><span class="label">Versículo de la semana</span><p id="vKid"></p><span class="muted" id="vRef"></span></div>
+      <div id="days" style="display:flex;flex-direction:column;gap:10px"></div>
+      <div class="tip" id="pTip"></div>
+      <div class="foot">
+        <p class="note" id="pNote"></p>
+        <div class="share"><span class="label">Compartir con tu esposa</span><p style="font-size:.9rem">Este mismo link abre el mismo plan en otro teléfono. Lo que marque uno lo ve el otro.</p><code id="shareUrl"></code><button class="btn ghost" id="copy" type="button">Copiar link</button></div>
+        <p class="sync" id="sync"></p>
+        <button class="linkbtn" id="redo">Cambiar respuestas del plan</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+const WEEKS = {
+  obedecer:{
+    title:"Obedecer a la primera", reto:"Le cuesta obedecer", lema:"Escucho y obedezco a la primera, con alegría.",
+    verse:{kid:"Hijos, obedezcan a sus papás, porque eso agrada a Dios.", ref:"Efesios 6:1 · Colosenses 3:20 (en palabras para niños)"},
+    days:[
+      {tipo:"Historia",t:"Samuel escucha",lee:"1 Samuel 3:1-10. Dios llama a Samuel de noche y él responde rápido: «Heme aquí».",
+       conversa:["¿Qué hizo Samuel cada vez que lo llamaron?","¿Se demoró o fue rápido? ¿Por qué crees que fue rápido?"],
+       juega:"«¡Aquí estoy!»: un papá llama a {n} desde otra pieza. {n} corre y responde «¡Aquí estoy!». Repitan 5 veces, cada vez desde más lejos.",
+       ora:"Den gracias porque Dios nos habla en la Biblia. Pidan oídos atentos para escuchar a Dios y a los papás."},
+      {tipo:"Versículo",t:"El versículo con gestos",lee:"Lean juntos Efesios 6:1 en su Biblia.",
+       conversa:["¿Por qué Dios nos pide obedecer a los papás?","¿Cómo nos cuida Dios a través de los papás?"],
+       juega:"Aprendan el versículo con gestos: «hijos» (se señala), «obedezcan» (mano en la oreja), «a sus papás» (apunta a ustedes), «agrada a Dios» (mano en el corazón). Después, una palabra por cada salto.",
+       ora:"Pidan a Dios un corazón que quiera obedecer, no solo por los puntos sino porque Él nos ama."},
+      {tipo:"Movimiento",t:"El semáforo",lee:"Recuerden el versículo de memoria.",
+       conversa:["¿Qué es más difícil: parar cuando estás jugando o cuando estás aburrido?","Obedecer a la primera es como frenar en rojo. ¿Qué pasa si un auto se demora en frenar?"],
+       juega:"Semáforo: «verde» corre, «amarillo» camina, «rojo» queda congelado al instante. Si frena a la primera, gana una ronda. Jueguen 5 minutos.",
+       ora:"Agradezcan por las reglas que nos cuidan, como un semáforo."},
+      {tipo:"Situación real",t:"En el colegio y en la casa",lee:"Repasen el versículo.",
+       conversa:["Si la profe dice «guarden los cuadernos» y tú quieres seguir dibujando, ¿qué haces?","Si estás jugando y te dicen «a bañarse», ¿qué respondes?"],
+       juega:"Actúen las dos escenas: un papá hace de profe y después de papá. {n} practica responder «Sí, voy» y hacerlo de inmediato. Cambien los roles: que {n} sea el papá.",
+       ora:"Oren por la profe y los compañeros de {n}. Pidan ayuda para obedecer también cuando nadie está mirando."},
+      {tipo:"Desafío",t:"Jesús también obedeció",lee:"Lucas 2:51. Jesús, siendo niño, obedecía a María y José.",
+       conversa:["Si Jesús obedeció a sus papás, ¿qué nos enseña a nosotros?","¿En qué momento de esta semana obedeciste a la primera?"],
+       juega:"Desafío de la semana: un día completo obedeciendo a la primera. Digan el versículo de memoria y celebren con un abrazo de equipo.",
+       ora:"Den gracias porque Jesús nos muestra el camino. Cada uno agradece algo que aprendió esta semana."}
+    ]},
+  verdad:{
+    title:"Decir la verdad", reto:"Le cuesta decir la verdad", lema:"Digo la verdad aunque me cueste.",
+    verse:{kid:"Dejen la mentira y digan siempre la verdad.", ref:"Efesios 4:25 · Proverbios 12:22 (en palabras para niños)"},
+    days:[
+      {tipo:"Historia",t:"Zaqueo baja del árbol",lee:"Lucas 19:1-10. Jesús busca a Zaqueo, y Zaqueo reconoce lo malo que hizo y lo arregla.",
+       conversa:["¿Jesús dejó de querer a Zaqueo por lo que había hecho?","¿Qué hizo Zaqueo después de estar con Jesús?"],
+       juega:"{n} se sube a una silla firme (el árbol). Cuando el papá dice «Zaqueo, baja», {n} baja y dice algo que quiere arreglar.",
+       ora:"Den gracias porque Jesús nos ama y nos perdona cuando decimos la verdad sobre lo que hicimos."},
+      {tipo:"Versículo",t:"¿Verdad o mentira?",lee:"Lean Efesios 4:25 en su Biblia.",
+       conversa:["¿Por qué a Dios le importa que digamos la verdad?","¿Cómo te sientes por dentro cuando dices una mentira?"],
+       juega:"Juego: el papá dice frases («el cielo es verde», «los perros ladran») y {n} grita «¡Verdad!» o «¡Mentira!». Después {n} inventa las frases.",
+       ora:"Pidan a Dios valentía para decir la verdad."},
+      {tipo:"Movimiento",t:"La torre de la confianza",lee:"Recuerden el versículo de memoria.",
+       conversa:["La confianza se construye bloque a bloque. ¿Qué pasa con la torre cuando alguien miente?","¿Cuánto cuesta volver a armarla?"],
+       juega:"Armen una torre con vasos o bloques. Cada bloque es una verdad que dijeron hoy. Al final, un soplido la bota: así de rápido una mentira derriba la confianza. Vuelvan a armarla juntos.",
+       ora:"Agradezcan por la confianza en la familia."},
+      {tipo:"Situación real",t:"Cuando algo se rompe",lee:"Repasen el versículo.",
+       conversa:["Si en el recreo se rompe algo y preguntan quién fue, ¿qué haces?","¿Por qué es mejor decirlo rápido?"],
+       juega:"Actúen la escena. {n} practica decir «Fui yo, lo siento». Los papás prometen en voz alta: «Cuando digas la verdad, te vamos a escuchar con calma».",
+       ora:"Pidan a Dios que la familia sea un lugar donde decir la verdad sea seguro."},
+      {tipo:"Desafío",t:"Jesús es la verdad",lee:"Juan 14:6. Jesús dijo que Él es el camino, la verdad y la vida.",
+       conversa:["Si Jesús es la verdad, ¿qué significa seguirlo?","¿Hubo un momento esta semana en que dijiste una verdad difícil?"],
+       juega:"Desafío de la semana: si se equivoca, decirlo rápido. Una verdad difícil dicha a tiempo vale puntos extra en la tabla. Digan el versículo de memoria.",
+       ora:"Cada uno agradece algo de la semana y pide perdón por algo, si lo necesita."}
+    ]},
+  calma:{
+    title:"Dominio propio", reto:"Juega brusco o pega", lema:"Soy fuerte cuando me calmo.",
+    verse:{kid:"Es más fuerte el que se calma que el que pelea.", ref:"Proverbios 16:32 (en palabras para niños)"},
+    days:[
+      {tipo:"Historia",t:"David no ataca a Saúl",lee:"1 Samuel 24:1-12. David tiene a Saúl muy cerca en la cueva, pero no le hace daño.",
+       conversa:["David podía atacar a Saúl. ¿Por qué no lo hizo?","¿Quién fue más valiente: el que pega o el que se controla?"],
+       juega:"Armen una cueva con una frazada y actúen la historia. {n} es David y decide no hacer daño.",
+       ora:"Den gracias porque Dios nos ayuda a controlarnos."},
+      {tipo:"Versículo",t:"El fruto del Espíritu",lee:"Gálatas 5:22-23. El dominio propio es parte del fruto que el Espíritu Santo produce.",
+       conversa:["¿Qué es el dominio propio? (mandar sobre mis manos y mi boca)","¿Lo podemos lograr solos o necesitamos a Dios?"],
+       juega:"Aprendan el versículo con gestos: «más fuerte» (brazos de fuerza), «el que se calma» (manos que bajan lento). Después dibujen un árbol con un fruto que diga «dominio propio».",
+       ora:"Pidan al Espíritu Santo que les dé dominio propio."},
+      {tipo:"Movimiento",t:"La respiración del arquero",lee:"Recuerden el versículo de memoria.",
+       conversa:["Antes de atajar un penal, ¿el arquero está nervioso o calmado?","¿Cuándo sientes rabia en el cuerpo? ¿Dónde la sientes?"],
+       juega:"Respiración del arquero: inhalar contando 4 (oler una flor) y botar contando 4 (soplar una vela), 3 veces. Después lancen una pelota blanda: {n} ataja con calma, sin tirarse brusco.",
+       ora:"Agradezcan por el cuerpo que Dios nos dio y pidan usarlo para cuidar, no para dañar."},
+      {tipo:"Situación real",t:"En el recreo",lee:"Repasen el versículo.",
+       conversa:["Si en el fútbol o el taca-taca alguien te empuja o hace trampa, ¿qué haces?","¿A quién le puedes pedir ayuda en el colegio?"],
+       juega:"Practiquen el plan de 3 pasos: «Paro, respiro, hablo o busco a la profe». Actúen la escena con un cojín como el compañero que empuja.",
+       ora:"Oren por los compañeros con los que {n} juega en el recreo."},
+      {tipo:"Desafío",t:"Fuerte por dentro",lee:"Repasen Gálatas 5:22-23 y Proverbios 16:32.",
+       conversa:["¿Usaste la respiración del arquero esta semana?","¿Qué te ayudó más a calmarte?"],
+       juega:"Desafío de la semana: cero empujones. Cuando sienta rabia, usa la respiración del arquero y lo cuenta en la casa. Digan el versículo de memoria.",
+       ora:"Den gracias por cada vez que Dios ayudó a {n} a calmarse."}
+    ]},
+  turno:{
+    title:"Paciencia y compartir", reto:"Le cuesta esperar su turno", lema:"Espero mi turno y comparto lo que tengo.",
+    verse:{kid:"El amor es paciente y es amable.", ref:"1 Corintios 13:4 · Filipenses 2:4 (en palabras para niños)"},
+    days:[
+      {tipo:"Historia",t:"Abraham deja elegir a Lot",lee:"Génesis 13:5-12. Abraham deja que Lot elija primero la tierra, y Dios cuida a Abraham.",
+       conversa:["Abraham podía elegir primero. ¿Por qué dejó elegir a Lot?","¿Dios se olvidó de Abraham por ceder?"],
+       juega:"Pongan dos colaciones distintas en la mesa. {n} deja que otro elija primero.",
+       ora:"Den gracias porque Dios nos cuida cuando cedemos."},
+      {tipo:"Historia",t:"El niño que compartió",lee:"Juan 6:5-13. Un niño comparte cinco panes y dos peces, y Jesús alimenta a una multitud.",
+       conversa:["El niño tenía poco. ¿Qué hizo Jesús con eso?","¿Qué cosa tuya podrías compartir?"],
+       juega:"Partan una colación en dos y {n} reparte. Aprendan el versículo de la semana con gestos.",
+       ora:"Agradezcan por lo que tienen y pidan un corazón generoso."},
+      {tipo:"Movimiento",t:"La silla del turno",lee:"Recuerden el versículo de memoria.",
+       conversa:["¿Qué sientes en el cuerpo cuando tienes que esperar?","¿Qué puedes hacer mientras esperas?"],
+       juega:"Jueguen a lanzar la pelota por turnos. Quien espera se sienta en «la silla del turno» y cuenta hasta 10 despacio antes de que le toque.",
+       ora:"Pidan paciencia para esperar sin enojarse."},
+      {tipo:"Situación real",t:"Levantar la mano",lee:"Repasen el versículo.",
+       conversa:["En clase quieres hablar y no es tu turno. ¿Qué haces?","En el taca-taca del recreo hay fila. ¿Cómo esperas?"],
+       juega:"Actúen una clase: el papá es la profe. {n} levanta la mano y espera a que le den la palabra. Después actúen la fila del taca-taca.",
+       ora:"Oren por la profe y por los compañeros de la fila."},
+      {tipo:"Desafío",t:"El amor es paciente",lee:"Filipenses 2:4. Pensar también en lo que necesitan los demás.",
+       conversa:["¿A quién le compartiste algo esta semana?","¿Cuándo esperaste tu turno sin reclamar?"],
+       juega:"Desafío de la semana: compartir algo suyo (un juguete, una colación) con un compañero o hermano. Digan el versículo de memoria.",
+       ora:"Cada uno agradece algo del plan completo y pide a Dios seguir creciendo."}
+    ]}
+};
+const ORDER = ["obedecer","verdad","calma","turno"];
+const STYLE = {
+  mov:{label:"Aprender en movimiento", tip:"A {n} le ayuda moverse: hagan el versículo con saltos y gestos todos los días, no solo el día del juego."},
+  hist:{label:"Historias que se actúan", tip:"A {n} le gustan las historias: después de leer, pídanle que la cuente con sus palabras y que la actúe."},
+  crea:{label:"Dibujar y crear", tip:"A {n} le gusta crear: dejen papel y lápices a mano para que dibuje la historia o el versículo de cada día."}
+};
+const MOMENT = {man:"en la mañana, antes del colegio", tar:"en la tarde, después del colegio", noc:"antes de dormir"};
+const PTS_DAY=10, PTS_LAST=20;
+
+const Q = [
+  {k:"name", t:"¿Cómo se llama tu hijo?", s:"Lo usaremos en el plan para que las actividades le hablen a él.", type:"text"},
+  {k:"reto", t:"¿Qué le cuesta más hoy?", s:"Esa semana irá primero en el plan.", opts:ORDER.map((k,i)=>({v:k,l:WEEKS[k].reto,d:WEEKS[k].title,ic:i+1}))},
+  {k:"style", t:"¿Cómo aprende mejor?", s:"Ajusta el consejo que acompaña cada semana.", opts:[
+    {v:"mov",l:"Moviéndose",d:"Corre, salta, no se queda quieto",ic:"A"},
+    {v:"hist",l:"Con historias",d:"Le encanta que le cuenten y actuar",ic:"B"},
+    {v:"crea",l:"Dibujando y creando",d:"Se concentra con las manos ocupadas",ic:"C"}]},
+  {k:"moment", t:"¿Cuándo tienen 15 minutos juntos?", s:"Elijan un momento fijo para que se vuelva hábito.", opts:[
+    {v:"man",l:"En la mañana",d:"Antes del colegio",ic:"1"},
+    {v:"tar",l:"En la tarde",d:"Después del colegio",ic:"2"},
+    {v:"noc",l:"Antes de dormir",d:"Como cierre del día",ic:"3"}]}
+];
+
+let st = {name:"",reto:"",style:"",moment:"",done:{},week:0};
+let qi = 0;
+const $ = id=>document.getElementById(id);
+const esc = s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const nm = ()=> st.name.trim() || "tu hijo";
+const fill = s=> esc(s).replaceAll("{n}", esc(nm()));
+/* BASE DE DATOS COMPARTIDA (Firebase Realtime Database, REST sin SDK)
+   Datos en /corazon/{sala}: cfg = respuestas del quiz, done = actividades hechas.
+   La sala va en el link (#sala=...): quien tenga el link ve y marca lo mismo. */
+const BASE_DATOS = "https://puntos-noah-default-rtdb.firebaseio.com";
+const SEGUNDOS_REFRESCO = 5;
+function idSala(){
+  const m=(location.hash||"").match(/sala=([A-Za-z0-9_-]{4,40})/);
+  if(m) return m[1];
+  const n=Math.random().toString(36).slice(2,8)+Math.random().toString(36).slice(2,6);
+  try{history.replaceState(null,"","#sala="+n)}catch(e){}
+  return n;
+}
+const SALA=idSala();
+const RAIZ=BASE_DATOS.replace(/\/$/,"")+"/corazon/"+SALA;
+const CLAVE_LOCAL="entrena-corazon:"+SALA;
+let modo="cargando", pend={}, ultimo=null;
+function saveLocal(){try{localStorage.setItem(CLAVE_LOCAL,JSON.stringify({st:st,pend:pend}))}catch(e){}}
+function save(){saveLocal()}
+function load(){try{const r=localStorage.getItem(CLAVE_LOCAL); if(r){const o=JSON.parse(r); if(o&&o.st){st=Object.assign(st,o.st,{done:o.st.done||{}}); pend=o.pend||{}}}}catch(e){}}
+function putNube(path,val){
+  pend[path]=val; saveLocal();
+  return fetch(RAIZ+"/"+path+".json", val===null?{method:"DELETE"}:{method:"PUT",body:JSON.stringify(val)})
+    .then(r=>{if(!r.ok)throw new Error("HTTP "+r.status); if(pend[path]===val) delete pend[path]; saveLocal(); ultimo=null; if(modo!=="nube"){modo="nube";syncTxt()}})
+    .catch(()=>{modo="local";syncTxt()});
+}
+function retryPend(){Object.keys(pend).forEach(p=>putNube(p,pend[p]))}
+function cfgOf(){return {name:st.name.trim(),reto:st.reto,style:st.style,moment:st.moment}}
+async function leerNube(){
+  try{
+    const r=await fetch(RAIZ+".json",{cache:"no-store"});
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    const txt=await r.text();
+    if(modo!=="nube"){modo="nube"; retryPend()}
+    if(txt!==ultimo){
+      ultimo=txt;
+      const v=JSON.parse(txt)||{};
+      const enQuiz=!$("s-quiz").hidden||!$("s-load").hidden;
+      if(v.cfg&&!enQuiz&&!("cfg" in pend)){st.name=v.cfg.name||"";st.reto=v.cfg.reto||"";st.style=v.cfg.style||"";st.moment=v.cfg.moment||""}
+      const d=Object.assign({},v.done||{});
+      Object.keys(pend).forEach(p=>{if(p.startsWith("done/")){const id=p.slice(5); if(pend[p]===null) delete d[id]; else d[id]=true}});
+      st.done=d; saveLocal(); refresh();
+    }
+  }catch(e){ modo="local" }
+  syncTxt();
+}
+function syncTxt(){
+  const t= modo==="nube"?"Sincronizado: los cambios se ven en ambos teléfonos":modo==="local"?"Sin conexión con la base: se guarda en este teléfono y se envía al volver la conexión":"Conectando…";
+  ["sync","sync0"].forEach(i=>{const e=$(i); if(e){e.textContent=t; e.classList.toggle("off",modo==="local")}});
+}
+function refresh(){
+  const ok=st.reto&&st.style&&st.moment&&WEEKS[st.reto];
+  if(!$("s-plan").hidden&&ok) renderPlan();
+  else if(!$("s-result").hidden&&ok) renderResult();
+  else if(!$("s-start").hidden){ $("resume").hidden=!ok; if(ok)$("resume").textContent="Seguir con el plan de "+nm(); updPts() }
+}
+function show(id){["s-start","s-quiz","s-load","s-result","s-plan"].forEach(s=>$(s).hidden=s!==id); window.scrollTo(0,0)}
+function order(){return [st.reto,...ORDER.filter(k=>k!==st.reto)].filter(k=>WEEKS[k])}
+function weekPts(k){return WEEKS[k].days.reduce((a,_,i)=>a+(st.done[k+"-"+i]?(i===4?PTS_LAST:PTS_DAY):0),0)}
+function totalPts(){return ORDER.reduce((a,k)=>a+weekPts(k),0)}
+function updPts(){const p=$("ptsTop"); p.textContent=totalPts()+" pts"; p.hidden=!st.reto}
+
+/* quiz */
+function renderQ(){
+  const q=Q[qi];
+  $("bar").style.width=((qi+1)/Q.length*100)+"%";
+  $("qstep").textContent="Pregunta "+(qi+1)+" de "+Q.length;
+  $("qtitle").textContent=q.t; $("qsub").textContent=q.s;
+  const b=$("qbody"); b.innerHTML="";
+  if(q.type==="text"){
+    b.innerHTML='<label class="label" for="qname" style="display:block;margin-bottom:6px">Nombre</label><input type="text" id="qname" maxlength="24" autocomplete="off" placeholder="Ej: Tomás">';
+    const i=$("qname"); i.value=st.name; i.addEventListener("input",()=>{st.name=i.value;check()});
+    i.addEventListener("keydown",e=>{if(e.key==="Enter"&&st.name.trim())nextQ()});
+  } else {
+    const w=document.createElement("div"); w.className="opts";
+    q.opts.forEach(o=>{
+      const bt=document.createElement("button"); bt.className="opt"; bt.type="button"; bt.id="opt-"+q.k+"-"+o.v;
+      bt.setAttribute("aria-pressed",st[q.k]===o.v?"true":"false");
+      bt.innerHTML='<span class="ic">'+o.ic+'</span><span>'+esc(o.l)+'<small>'+esc(o.d)+'</small></span>';
+      bt.onclick=()=>{st[q.k]=o.v; w.querySelectorAll(".opt").forEach(x=>x.setAttribute("aria-pressed","false")); bt.setAttribute("aria-pressed","true"); check(); setTimeout(nextQ,220)};
+      w.appendChild(bt)});
+    b.appendChild(w);
+  }
+  $("back").textContent= qi===0?"Volver":"Atrás";
+  $("next").textContent= qi===Q.length-1?"Ver el plan":"Siguiente";
+  check();
+}
+function check(){const q=Q[qi]; const ok= q.type==="text"? !!st.name.trim() : !!st[q.k]; $("next").disabled=!ok; $("next").style.opacity=ok?1:.45}
+function nextQ(){const q=Q[qi]; if(q.type==="text"?!st.name.trim():!st[q.k])return; if(qi<Q.length-1){qi++;renderQ()} else finishQuiz()}
+function finishQuiz(){
+  save(); putNube("cfg",cfgOf()); show("s-load");
+  const msgs=["Ordenando las semanas…","Eligiendo historias bíblicas…","¡Listo!"];
+  const fast=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let i=0; $("loadTxt").textContent=msgs[0];
+  const t=setInterval(()=>{i++; if(i<msgs.length)$("loadTxt").textContent=msgs[i]; else{clearInterval(t);renderResult();show("s-result")}}, fast?200:650);
+}
+
+/* resultado */
+function renderResult(){
+  $("rTitle").innerHTML="¡El plan de "+esc(nm())+" está listo!";
+  $("rReto").textContent=WEEKS[st.reto].title;
+  $("rEnfoque").textContent=STYLE[st.style].label;
+  $("rMoment").innerHTML="15 minutos "+MOMENT[st.moment]+", de lunes a viernes. Cada actividad terminada suma puntos para la tabla de "+esc(nm())+".";
+  const w=$("rWeeks"); w.innerHTML="";
+  order().forEach((k,i)=>{
+    const total=4*PTS_DAY+PTS_LAST;
+    const d=document.createElement("div"); d.className="card plan-w"+(i===0?" main":"");
+    d.innerHTML=(i===0?'<span class="badge">Su reto principal</span>':'')+'<span class="n">'+(i+1)+'</span><div class="tx"><h3>'+esc(WEEKS[k].title)+'</h3><p class="muted" style="font-size:.92rem">'+esc(WEEKS[k].lema)+'</p></div><span class="ppts">+'+total+'</span>';
+    w.appendChild(d)});
+  $("rTip").innerHTML="<b>Consejo:</b> "+fill(STYLE[st.style].tip);
+  updPts();
+}
+
+/* plan */
+function renderPlan(){
+  $("shareUrl").textContent=location.href;
+  const ks=order(); if(st.week>3)st.week=0;
+  const tabs=$("tabs"); tabs.innerHTML="";
+  ks.forEach((k,i)=>{
+    const t=document.createElement("button"); t.className="tab"; t.type="button"; t.id="tab-"+i; t.setAttribute("role","tab");
+    t.setAttribute("aria-selected",i===st.week?"true":"false");
+    t.innerHTML="Sem. "+(i+1)+"<small>"+weekPts(k)+"/60</small>";
+    t.onclick=()=>{st.week=i;save();renderPlan()};
+    tabs.appendChild(t)});
+  const k=ks[st.week], W=WEEKS[k];
+  $("wkLabel").textContent="Semana "+(st.week+1)+" de 4";
+  $("wkTitle").textContent=W.title; $("wkLema").textContent=W.lema;
+  $("vKid").textContent=W.verse.kid; $("vRef").textContent=W.verse.ref;
+  const D=$("days"); D.innerHTML="";
+  const dias=["Lunes","Martes","Miércoles","Jueves","Viernes"];
+  W.days.forEach((d,i)=>{
+    const id=k+"-"+i, done=!!st.done[id], pts=i===4?PTS_LAST:PTS_DAY;
+    const el=document.createElement("details"); el.className="day"+(done?" is-done":"");
+    const firstOpen=W.days.findIndex((_,j)=>!st.done[k+"-"+j]);
+    if(i===firstOpen) el.open=true;
+    el.innerHTML='<summary><span class="dn">'+(done?"✓":(i+1))+'</span><span class="st"><span>'+dias[i]+' · '+esc(d.tipo)+'</span><b>'+esc(d.t)+'</b></span><svg class="chev" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></summary>'+
+      '<div class="body">'+
+      '<div class="blk"><span class="label">Lean</span><p>'+fill(d.lee)+'</p></div>'+
+      '<div class="blk"><span class="label">Conversen</span><ul>'+d.conversa.map(c=>"<li>"+fill(c)+"</li>").join("")+'</ul></div>'+
+      '<div class="blk"><span class="label">Jueguen</span><p>'+fill(d.juega)+'</p></div>'+
+      '<div class="blk"><span class="label">Ideas para orar</span><p>'+fill(d.ora)+'</p></div>'+
+      '<button class="done" type="button" id="done-'+id+'">'+(done?"Hecho · +"+pts+" pts":"Lo hicimos · +"+pts+" pts")+'</button>'+
+      '</div>';
+    el.querySelector(".done").onclick=()=>{ if(st.done[id]){ delete st.done[id]; putNube("done/"+id,null) } else { st.done[id]=true; putNube("done/"+id,true) } renderPlan(); updPts(); };
+    D.appendChild(el)});
+  $("pTip").innerHTML="<b>Consejo para "+esc(nm())+":</b> "+fill(STYLE[st.style].tip);
+  const wp=weekPts(k);
+  $("pNote").innerHTML="Esta semana: "+wp+" de 60 puntos · Total del plan: "+totalPts()+" de 240. Anótalos en la tabla de puntos de "+esc(nm())+".";
+  updPts();
+}
+
+$("go").onclick=()=>{qi=0;show("s-quiz");renderQ()};
+$("back").onclick=()=>{if(qi===0)show("s-start"); else{qi--;renderQ()}};
+$("next").onclick=nextQ;
+$("startPlan").onclick=()=>{st.week=0;save();renderPlan();show("s-plan")};
+$("resume").onclick=()=>{renderPlan();show("s-plan")};
+$("redo").onclick=()=>{qi=0;show("s-quiz");renderQ()};
+
+$("copy").onclick=()=>{
+  const u=location.href, b=$("copy");
+  const ok=()=>{b.textContent="Link copiado"; setTimeout(()=>b.textContent="Copiar link",2000)};
+  const fb=()=>{const r=document.createRange(); r.selectNodeContents($("shareUrl")); const s=getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent="Link seleccionado: cópialo"};
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(u).then(ok).catch(fb); else fb();
+};
+load();
+$("shareUrl").textContent=location.href;
+refresh(); syncTxt();
+leerNube();
+setInterval(leerNube,SEGUNDOS_REFRESCO*1000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)leerNube()});
+</script>
+</body>
+</html>
